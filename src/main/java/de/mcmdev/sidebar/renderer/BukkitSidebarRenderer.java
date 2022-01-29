@@ -48,6 +48,15 @@ public class BukkitSidebarRenderer implements SidebarRenderer {
 
     private final String rendererId = Integer.toHexString(ThreadLocalRandom.current().nextInt());
     private final Pattern pattern = Pattern.compile(rendererId + "_(\\d\\d?)");
+    private final boolean zeroScores;
+
+    public BukkitSidebarRenderer() {
+        this(false);
+    }
+
+    public BukkitSidebarRenderer(boolean zeroScores) {
+        this.zeroScores = zeroScores;
+    }
 
     @Override
     public void add(Player player, Sidebar sidebar) {
@@ -58,7 +67,10 @@ public class BukkitSidebarRenderer implements SidebarRenderer {
 
     @Override
     public void remove(Player player, Sidebar sidebar) {
-        //Nothing for now
+        Scoreboard scoreboard = player.getScoreboard();
+        Objective objective = scoreboard.getObjective("sidebar");
+        if(objective == null) return;
+        objective.unregister();
     }
 
     @Override
@@ -68,6 +80,7 @@ public class BukkitSidebarRenderer implements SidebarRenderer {
         for (Player viewer : sidebar.getViewers()) {
             List<Component> lines = List.copyOf(sidebar.getLineFunction().apply(viewer));
 
+            renderTitle(viewer, sidebar.getTitle().apply(viewer));
             cleanup(viewer, lines.size());
             for (int i = 0; i < lines.size(); i++) {
                 renderLine(viewer, i, lines.get(i));
@@ -94,7 +107,13 @@ public class BukkitSidebarRenderer implements SidebarRenderer {
 
         team.prefix(line);
 
-        objective.getScore(entry).setScore(16 - index);
+        objective.getScore(entry).setScore(zeroScores ? 0 : (16 - index));
+    }
+
+    private void renderTitle(Player player, Component title)    {
+        Objective objective = player.getScoreboard().getObjective("sidebar");
+        if (objective == null) return;
+        objective.displayName(title);
     }
 
     private void cleanup(Player player, int size) {
@@ -104,7 +123,7 @@ public class BukkitSidebarRenderer implements SidebarRenderer {
             String name = team.getName();
             Matcher matcher = pattern.matcher(name);
             if(!matcher.matches()) continue;
-            if(Integer.parseInt(matcher.group(1)) <= size) continue;
+            if(Integer.parseInt(matcher.group(1)) < size) continue;
             for (String entry : team.getEntries()) {
                 scoreboard.resetScores(entry);
             }
