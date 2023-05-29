@@ -1,6 +1,11 @@
+# Description
 A library for scoreboard sidebars using the new adventure components
 
-Example code
+# Download
+Since the project consists of only a few classes and is considered done, the easiest way to use it is probably to just copy and paste the source files into your project.
+Otherwise, you could use a service like Jitpack to get a Maven dependency from this repo.
+
+# Example code
 ```java
 package de.mcmdev.sidebar;
 
